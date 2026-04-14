@@ -1,0 +1,70 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: Tornado Vortex — Campo de Presión     |
+|  \\    /   O peration     |                                                 |
+\*---------------------------------------------------------------------------*/
+
+// ============================================================
+// CAMPO DE PRESIÓN CINEMÁTICA — p (p_real / ρ) [m²/s²]
+// ============================================================
+// En OpenFOAM incompresible, p representa p/ρ (presión cinemática)
+// para simplificar las ecuaciones.
+//
+// Física del núcleo de baja presión:
+// En el centro del tornado, la fuerza centrífuga balancea el gradiente
+// de presión radial:
+//
+//   dp/dr = ρ·u_θ²/r   (balance ciclostrófico)
+//
+// Integrando desde el borde hasta el centro:
+//   Δp = ρ·Γ²/(8π²·rc²)
+//
+// En tornados reales: Δp ≈ 50-100 hPa en el núcleo
+// ============================================================
+
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       volScalarField;
+    object      p;
+}
+
+// Presión interna: referencia cero (gauge pressure)
+internalField   uniform 0;
+
+boundaryField
+{
+    // --------------------------------------------------------
+    // BASE — Gradiente de presión nulo (Neumann)
+    // El flujo entra por velocidad prescrita, no por presión
+    // --------------------------------------------------------
+    bottom
+    {
+        type            zeroGradient;
+    }
+
+    // --------------------------------------------------------
+    // TOPE — Presión de referencia fijada = 0
+    // Condición de Dirichlet: presión atmosférica de salida
+    // --------------------------------------------------------
+    top
+    {
+        type            totalPressure;
+        p0              uniform 0;
+    }
+
+    // --------------------------------------------------------
+    // LATERAL — Presión de referencia (borde del dominio)
+    // --------------------------------------------------------
+    side
+    {
+        type            totalPressure;
+        p0              uniform 0;
+    }
+
+    axis
+    {
+        type            empty;
+    }
+}

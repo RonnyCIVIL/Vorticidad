@@ -1,0 +1,58 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: Energía Cinética Turbulenta (k)       |
+\*---------------------------------------------------------------------------*/
+
+// ============================================================
+// ENERGÍA CINÉTICA TURBULENTA — k [m²/s²]
+// ============================================================
+// k = (1/2) * <u'·u'> = (1/2) * (u'² + v'² + w'²)
+//
+// Representa la energía contenida en las fluctuaciones turbulentas.
+// Mayor k → mayor intensidad de turbulencia.
+//
+// Estimación inicial: k = (3/2) * (U_ref * I)²
+//   donde I = intensidad turbulenta (~5-10%)
+//
+// Para U_ref = 20 m/s, I = 0.05:
+//   k = 1.5 * (20 * 0.05)² = 1.5 m²/s²
+// ============================================================
+
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       volScalarField;
+    object      k;
+}
+
+internalField   uniform 1.5;
+
+boundaryField
+{
+    bottom
+    {
+        type            turbulentIntensityKineticEnergyInlet;
+        intensity       0.05;   // 5% de intensidad turbulenta
+        value           uniform 1.5;
+    }
+
+    top
+    {
+        type            inletOutlet;
+        inletValue      uniform 1.5;
+        value           uniform 1.5;
+    }
+
+    side
+    {
+        type            inletOutlet;
+        inletValue      uniform 1.5;
+        value           uniform 1.5;
+    }
+
+    axis
+    {
+        type            empty;
+    }
+}

@@ -1,0 +1,150 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: Control de Simulación — controlDict   |
+|  Tornado Vortex 3D — Simulación Transitoria                                |
+\*---------------------------------------------------------------------------*/
+
+// ============================================================
+// CONTROL DE SIMULACIÓN — controlDict
+// ============================================================
+// Define el tiempo de inicio/fin, paso de tiempo, y frecuencia
+// de escritura de resultados.
+//
+// Paso de tiempo adaptativo:
+//   Δt se ajusta automáticamente para mantener Co < 0.9
+//   Co = |U| * Δt / Δx
+//   Máximo permitido: 0.9 (para estabilidad PIMPLE)
+// ============================================================
+
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "system";
+    object      controlDict;
+}
+
+// Aplicación: pimpleFoam (Navier-Stokes incompresible, transitorio)
+// pimpleFoam = PISO + SIMPLE híbrido → más estable que icoFoam/pisoFoam
+// Permite Co > 1 (con pasos de tiempo grandes)
+application     pimpleFoam;
+
+// Tiempo de inicio (segundos)
+startFrom       startTime;
+startTime       0;
+
+// Tiempo de fin de simulación
+// Para el tornado, 10 segundos es suficiente para desarrollar
+// la estructura vorticosa estacionaria
+stopAt          endTime;
+endTime         10;
+
+// Paso de tiempo inicial (se ajusta automáticamente)
+deltaT          0.001;
+
+// Control de Co adaptativo
+adjustTimeStep  yes;
+maxCo           0.9;    // Número de Courant máximo
+maxDeltaT       0.01;   // Paso máximo aunque Co < 0.9
+
+// ============================================================
+// ESCRITURA DE RESULTADOS
+// Cada 0.1 segundos = 100 timesteps → 100 frames de animación
+// ============================================================
+writeControl    adjustableRunTime;
+writeInterval   0.1;
+
+// Purgar archivos viejos para ahorrar disco (0 = conservar todos)
+purgeWrite      0;
+
+// Formato de escritura
+writeFormat     ascii;
+writePrecision  6;
+
+// Solo escribir tiempo modificado (evita duplicados)
+writeCompression off;
+timeFormat      general;
+timePrecision   6;
+
+// Dirección de ejecución
+runTimeModifiable yes;
+
+// ============================================================
+// FUNCIONES DE POST-PROCESAMIENTO — cálculo en tiempo real
+// ============================================================
+functions
+{
+    // Calcular vorticidad: ω = ∇ × u
+    // Esta magnitud mide la rotación local del fluido
+    vorticity
+    {
+        type            vorticity;
+        libs            ("libfieldFunctionObjects.so");
+        writeControl    writeTime;
+    }
+
+    // Magnitud de velocidad
+    magU
+    {
+        type            mag;
+        field           U;
+        libs            ("libfieldFunctionObjects.so");
+        writeControl    writeTime;
+    }
+
+    // Líneas de flujo (streamlines) para visualización
+    streamlines
+    {
+        type            streamLines;
+        libs            ("libfieldFunctionObjects.so");
+        writeControl    writeTime;
+        setFormat       vtk;
+        U               U;
+        trackForward    true;
+        fields          (p U vorticity);
+        lifeTime        100;
+        seedSampleSet
+        {
+            type            uniform;
+            axis            x;
+            start           (-0.5 0 0.1);
+            end             ( 0.5 0 0.1);
+            nPoints         20;
+        }
+    }
+
+    // Monitorear presión mínima (núcleo del tornado)
+    minPressure
+    {
+        type            fieldMinMax;
+        libs            ("libfieldFunctionObjects.so");
+        fields          (p U);
+        writeControl    timeStep;
+        writeInterval   10;
+    }
+
+    // Plano de corte transversal (Z = 1.0 m)
+    cutting_plane
+    {
+        type            surfaces;
+        libs            ("libsampling.so");
+        writeControl    writeTime;
+        surfaceFormat   vtk;
+        fields          (U p vorticity);
+        surfaces
+        {
+            zNormal
+            {
+                type        cuttingPlane;
+                planeType   pointAndNormal;
+                pointAndNormalDict
+                {
+                    basePoint   (0 0 1.0);
+                    normalVector (0 0 1);
+                }
+                interpolate true;
+            }
+        }
+    }
+}

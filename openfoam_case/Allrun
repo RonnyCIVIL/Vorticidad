@@ -1,0 +1,73 @@
+#!/bin/bash
+# ============================================================
+# SCRIPT DE EJECUCIÓN DEL CASO OPENFOAM — Tornado 3D
+# ============================================================
+# Prerrequisitos:
+#   - OpenFOAM v2312 instalado (Ubuntu/WSL)
+#   - Source: source /opt/openfoam2312/etc/bashrc
+#
+# Uso:
+#   chmod +x Allrun
+#   ./Allrun
+# ============================================================
+
+# Obtener directorio del caso
+cd "${0%/*}" || exit 1
+. "$WM_PROJECT_DIR/bin/tools/RunFunctions"
+
+echo "=================================================="
+echo "  SIMULACIÓN CFD — TORNADO VÓRTICE 3D"
+echo "  Solver: pimpleFoam + k-epsilon RANS"
+echo "  Universidad — Mecánica de Fluidos"
+echo "=================================================="
+
+# ---- PASO 1: Generar malla ----
+echo ""
+echo ">> Paso 1: Generando malla con blockMesh..."
+runApplication blockMesh
+
+# Verificar calidad de malla
+echo ">> Verificando calidad de malla..."
+runApplication checkMesh
+
+# ---- PASO 2: Inicializar campos ----
+echo ""
+echo ">> Paso 2: Inicializando condición de velocidad rotacional..."
+# setFields para inicializar el perfil de vórtice de Rankine
+# (Requiere setFieldsDict en system/)
+# runApplication setFields
+
+# ---- PASO 3: Descomposición paralela ----
+echo ""
+echo ">> Paso 3: Configurando para ejecución paralela (4 núcleos)..."
+# Descomponer para 4 procesadores (si disponible)
+# runApplication decomposePar
+# mpirun -np 4 pimpleFoam -parallel | tee log.pimpleFoam
+
+# ---- PASO 4: Ejecutar solver ----
+echo ""
+echo ">> Paso 4: Ejecutando pimpleFoam..."
+echo "   (Esto puede tomar varios minutos)"
+runApplication pimpleFoam
+
+# ---- PASO 5: Post-procesamiento ----
+echo ""
+echo ">> Paso 5: Calculando vorticidad: ω = ∇×u..."
+runApplication postProcess -func vorticity
+
+echo ""
+echo ">> Paso 6: Calculando magnitud de velocidad..."
+runApplication postProcess -func "mag(U)"
+
+echo ""
+echo "=============================="
+echo "  SIMULACIÓN COMPLETADA"
+echo "=============================="
+echo ""
+echo "Para visualizar en ParaView:"
+echo "  $ paraFoam -touch"
+echo "  $ paraview tornado.foam"
+echo ""
+echo "Para post-procesamiento con Python:"
+echo "  cd ../python_post"
+echo "  python main.py"

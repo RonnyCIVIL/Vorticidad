@@ -1,0 +1,49 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: Propiedades de Transporte             |
+\*---------------------------------------------------------------------------*/
+
+// ============================================================
+// PROPIEDADES DE TRANSPORTE — transportProperties
+// ============================================================
+// Define las propiedades físicas del fluido (aire a nivel del suelo)
+//
+// Viscosidad cinemática del aire:
+//   ν = μ/ρ = 1.81×10⁻⁵ Pa·s / 1.225 kg/m³ ≈ 1.48×10⁻⁵ m²/s
+//
+// El número de Reynolds se calcula como:
+//   Re = U·L / ν
+//
+// Ejemplo para un tornado EF3:
+//   U = 70 m/s (velocidad de vórtice)
+//   L = 100 m (radio del núcleo)
+//   Re = 70 × 100 / 1.48×10⁻⁵ ≈ 4.7 × 10⁸   (EXTREMADAMENTE TURBULENTO)
+//
+// Para nuestra simulación escalada (laboratorio):
+//   U = 20 m/s, L = 0.5 m
+//   Re = 20 × 0.5 / 1.48×10⁻⁵ ≈ 675,000  (turbulento, Re >> 4000)
+// ============================================================
+
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "constant";
+    object      transportProperties;
+}
+
+// Modelo de transporte: Newtoniano (τ = μ·γ̇)
+// El agua y el aire son fluidos newtonianos a condiciones normales
+transportModel  Newtonian;
+
+// Viscosidad cinemática del aire a 20°C y 1 atm
+// ν = 1.48e-5 m²/s
+nu              [0 2 -1 0 0 0 0] 1.48e-05;
+
+// ============================================================
+// DENSIDAD (referencia, para post-procesamiento)
+// Para fluidos incompresibles, ρ es constante.
+// En OpenFOAM icoFoam/pimpleFoam, p = p_real/ρ
+// ============================================================
+// rho = 1.225 kg/m³  (aire a 15°C, 101325 Pa)

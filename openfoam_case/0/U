@@ -1,0 +1,94 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: Tornado Vortex CFD Simulation         |
+|  \\    /   O peration     | Solver: pimpleFoam + k-epsilon RANS             |
+|   \\  /    A nd           | Version: v2312                                  |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+
+// ============================================================
+// CAMPO DE VELOCIDAD INICIAL — U
+// ============================================================
+// Este archivo define las condiciones iniciales (t=0) y las
+// condiciones de frontera para el campo de velocidad u = (Ux, Uy, Uz)
+//
+// Ecuación de Navier-Stokes (momento):
+//   ∂u/∂t + (u·∇)u = -∇p/ρ + ν∇²u
+//
+// Términos:
+//   ∂u/∂t      — Aceleración local (variación temporal)
+//   (u·∇)u     — Advección no-lineal (convectivo, genera vorticidad)
+//   -∇p/ρ      — Gradiente de presión (fuerza de presión)
+//   ν∇²u       — Difusión viscosa (disipa energía)
+//
+// La VORTICIDAD se genera principalmente en la capa límite de la base
+// y es amplificada por el "vortex stretching": ω·∇u
+// ============================================================
+
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       volVectorField;
+    object      U;
+}
+
+// Valor interno inicial: flujo en reposo + pequeña perturbación rotacional
+internalField   uniform (0.001 0.001 0.5);
+
+boundaryField
+{
+    // --------------------------------------------------------
+    // BASE DEL DOMINIO — Entrada de flujo con rotación tangencial
+    // Simula la entrada de aire en la base del tornado
+    // Condición de Dirichlet: velocidad prescrita
+    // --------------------------------------------------------
+    bottom
+    {
+        type            fixedValue;
+        // Velocidad: componente tangencial + vertical (updraft)
+        // (Ux, Uy, Uz) = componentes del vórtice en la base
+        // Se impone rotación ciclónica (antihoraria en hemisfero norte)
+        value           uniform (0 0 0);
+    }
+
+    // --------------------------------------------------------
+    // PARTE SUPERIOR — Salida libre (outflow)
+    // Condición de Neumann: gradiente nulo (flujo libre)
+    // --------------------------------------------------------
+    top
+    {
+        type            pressureInletOutletVelocity;
+        value           uniform (0 0 0);
+    }
+
+    // --------------------------------------------------------
+    // PARED LATERAL DEL DOMINIO — Condición abierta
+    // inletOutlet: permite entrada y salida según la dirección local
+    // --------------------------------------------------------
+    side
+    {
+        type            inletOutlet;
+        inletValue      uniform (0 0 0);
+        value           uniform (0 0 0);
+    }
+
+    // --------------------------------------------------------
+    // EJE DE SIMETRÍA (centro del tornado)
+    // Para dominios con wedge o axis-symmetric
+    // --------------------------------------------------------
+    axis
+    {
+        type            empty;
+    }
+}
+
+// ============================================================
+// NOTA FÍSICA: El perfil de velocidad tangencial en un tornado
+// sigue el modelo de Rankine Combinado:
+//
+//   r < rc (núcleo forzado): u_θ = Ω·r  (sólido rígido)
+//   r > rc (externo libre): u_θ = Γ/(2π·r)  (vórtice potencial)
+//
+// donde rc = radio del núcleo, Ω = velocidad angular, Γ = circulación
+// ============================================================

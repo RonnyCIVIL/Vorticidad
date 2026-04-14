@@ -1,0 +1,142 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: Generación de Malla — blockMeshDict   |
+|  Tornado Vortex 3D — Dominio Cilíndrico                                    |
+\*---------------------------------------------------------------------------*/
+
+// ============================================================
+// MALLA DEL DOMINIO — Tornado 3D
+// ============================================================
+// Geometría: Cilindro 3D
+//   - Radio total: R = 2.0 m
+//   - Altura: H = 4.0 m
+//   - Centro del eje: (0, 0, 0)
+//
+// La malla usa un bloque hexaédrico cartesiano que aproxima
+// el cilindro. Para mayor precisión, usar snappyHexMesh o
+// una malla polyhedral polar.
+//
+// Resolución de malla:
+//   - 40 celdas en X, 40 en Y, 60 en Z
+//   - Refinamiento radial: más denso cerca del eje (factor 0.2)
+//   - El ratio de aspecto es crítico para capturar la capa límite
+//
+// CRITERIO DE COURANT (estabilidad):
+//   Co = |U| * Δt / Δx < 1
+//   Para U = 20 m/s, Δx = 0.05 m → Δt < 0.0025 s
+// ============================================================
+
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      blockMeshDict;
+}
+
+// Escala de la malla (multiplicador de coordenadas)
+scale   1;
+
+// ============================================================
+// VÉRTICES DEL DOMINIO CÚBICO CIRCUNSCRITO AL CILINDRO
+// Se inscribe un cubo de 4m × 4m × 4m
+// El cilindro real se define con las condiciones de frontera
+// ============================================================
+vertices
+(
+    // Base inferior (z = 0)
+    (-2  -2   0)  // 0
+    ( 2  -2   0)  // 1
+    ( 2   2   0)  // 2
+    (-2   2   0)  // 3
+
+    // Base superior (z = 4)
+    (-2  -2   4)  // 4
+    ( 2  -2   4)  // 5
+    ( 2   2   4)  // 6
+    (-2   2   4)  // 7
+);
+
+blocks
+(
+    // Bloque principal: hex con refinamiento vertical
+    // (40 40 60): resolución x, y, z
+    // simpleGrading: relación de tamaño celda final / inicial
+    //   - X: uniforme (1)
+    //   - Y: uniforme (1)
+    //   - Z: refinamiento desde base (0.1) — más denso en la base
+    //        donde la vorticidad se genera
+    hex (0 1 2 3 4 5 6 7) (40 40 60)
+    simpleGrading
+    (
+        1       // X: uniforme
+        1       // Y: uniforme
+        0.1     // Z: celdas más pequeñas arriba (donde está la salida)
+    )
+);
+
+edges
+(
+    // Arcos circulares para aproximar el cilindro en la periferia
+    // OpenFOAM con blockMesh: se usan arcos o splines
+    // Para cilindro exacto usar snappyHexMesh
+);
+
+boundary
+(
+    // --------------------------------------------------------
+    // ENTRADA — Parte inferior del dominio
+    // Aquí se aplica la velocidad rotacional del tornado
+    // --------------------------------------------------------
+    bottom
+    {
+        type    patch;
+        faces
+        (
+            (0 3 2 1)
+        );
+    }
+
+    // --------------------------------------------------------
+    // SALIDA — Parte superior del dominio
+    // El flujo sale libremente (updraft del tornado)
+    // --------------------------------------------------------
+    top
+    {
+        type    patch;
+        faces
+        (
+            (4 5 6 7)
+        );
+    }
+
+    // --------------------------------------------------------
+    // LATERALES — Paredes del dominio abierto
+    // Condiciones abiertas (permiten entrada/salida radial)
+    // --------------------------------------------------------
+    side
+    {
+        type    patch;
+        faces
+        (
+            (0 1 5 4)   // frente
+            (2 3 7 6)   // atrás
+            (1 2 6 5)   // derecha
+            (0 4 7 3)   // izquierda
+        );
+    }
+);
+
+mergePatchPairs
+(
+);
+
+// ============================================================
+// CALIDAD DE MALLA — Verificar con:
+//   $ checkMesh
+//
+// Criterios importantes:
+//   Max non-orthogonality < 70°  (ideal < 40°)
+//   Max skewness < 4             (ideal < 1)
+//   Min cell volume > 0
+// ============================================================

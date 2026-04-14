@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  # Backend y Python
+  backend:
+    build:
+      context: .
+      dockerfile: backend.Dockerfile
+    ports:
+      - "3001:3001"
+    volumes:
+      - ./frontend/public/data:/app/frontend/public/data
+    environment:
+      - PORT=3001
+    restart: always
+
+  # Frontend (Interfaz Web)
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend.Dockerfile
+    ports:
+      - "5173:5173"
+    depends_on:
+      - backend
+    restart: always

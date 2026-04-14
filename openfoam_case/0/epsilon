@@ -1,0 +1,63 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: Tasa de Disipación Turbulenta (ε)     |
+\*---------------------------------------------------------------------------*/
+
+// ============================================================
+// TASA DE DISIPACIÓN TURBULENTA — ε [m²/s³]
+// ============================================================
+// ε representa la tasa a la cual la energía cinética turbulenta
+// se convierte en calor por efectos viscosos.
+//
+// Estimación inicial: ε = Cμ^(3/4) * k^(3/2) / L
+//   donde:
+//   Cμ = 0.09 (constante del modelo k-ε)
+//   k  = energía cinética turbulenta inicial
+//   L  = escala de longitud integral (~10% del dominio)
+//
+// Para k = 1.5 m²/s², L = 0.5 m:
+//   ε = 0.09^(3/4) * 1.5^(3/2) / 0.5 ≈ 0.45 m²/s³
+//
+// Modelo k-ε estándar (Launder & Spalding, 1974):
+//   ∂k/∂t + U·∇k = ∇·[(ν + νt/σk)∇k] + Pk - ε
+//   ∂ε/∂t + U·∇ε = ∇·[(ν + νt/σε)∇ε] + C1ε·(ε/k)·Pk - C2ε·ε²/k
+// ============================================================
+
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       volScalarField;
+    object      epsilon;
+}
+
+internalField   uniform 0.45;
+
+boundaryField
+{
+    bottom
+    {
+        type            turbulentMixingLengthDissipationRateInlet;
+        mixingLength    0.5;
+        value           uniform 0.45;
+    }
+
+    top
+    {
+        type            inletOutlet;
+        inletValue      uniform 0.45;
+        value           uniform 0.45;
+    }
+
+    side
+    {
+        type            inletOutlet;
+        inletValue      uniform 0.45;
+        value           uniform 0.45;
+    }
+
+    axis
+    {
+        type            empty;
+    }
+}

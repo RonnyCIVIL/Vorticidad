@@ -1,0 +1,90 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: Esquemas Numéricos — fvSchemes        |
+\*---------------------------------------------------------------------------*/
+
+// ============================================================
+// ESQUEMAS DE DISCRETIZACIÓN — fvSchemes
+// ============================================================
+// Define cómo se discretizan los términos de las ecuaciones PDE.
+// La elección de esquemas afecta:
+//   - Precisión (orden de error)
+//   - Estabilidad numérica
+//   - Difusión numérica (amortiguación artificial)
+//
+// Para tornados (alta rotación), usar esquemas:
+//   - Linear (2do orden) — menos disipativo
+//   - Limiters (evitan oscilaciones numéricas en zonas de gradiente fuerte)
+// ============================================================
+
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "system";
+    object      fvSchemes;
+}
+
+// Término temporal: ∂u/∂t
+// Euler: 1er orden, incondicionalm estable (recomendado para arranque)
+// backward: 2do orden (más preciso, mayor oscilaciones iniciales)
+ddtSchemes
+{
+    default         Euler;
+}
+
+// Gradientes: ∇φ
+// Gauss linear: integración de Gauss con interpolación lineal (2do orden)
+gradSchemes
+{
+    default         Gauss linear;
+    grad(p)         Gauss linear;
+    grad(U)         Gauss linear;
+}
+
+// Divergencia: ∇·(uφ) — término convectivo
+// Este es el término no-lineal más crítico en Navier-Stokes
+// limitedLinear: lineal con limitador de flujo → evita dispersión espuria
+// para flujos rotacionales intensos
+divSchemes
+{
+    default                     none;
+
+    // Término advectivo de velocidad: (u·∇)u  — genera vorticidad
+    div(phi,U)                  Gauss limitedLinear 1;
+
+    // Térm. advectivo de k y ε del modelo de turbulencia
+    div(phi,k)                  Gauss limitedLinear 1;
+    div(phi,epsilon)            Gauss limitedLinear 1;
+
+    // Viscosidad turbulenta (nut) — si se calcula
+    div((nuEff*dev(T(grad(U)))) ) Gauss linear;
+    div(nonlinearStress)        Gauss linear;
+}
+
+// Laplaciano: ∇²φ — término difusivo (viscosidad)
+// Gauss linear corrected: 2do orden con corrección en mallas no-ortogonales
+laplacianSchemes
+{
+    default         Gauss linear corrected;
+}
+
+// Interpolación: de centros de celda a caras
+interpolationSchemes
+{
+    default         linear;
+}
+
+// Gradiente superficial: para corrección no-ortogonal
+snGradSchemes
+{
+    default         corrected;
+}
+
+// Control de no-ortogonalidad
+fluxRequired
+{
+    default         no;
+    p               ;
+}

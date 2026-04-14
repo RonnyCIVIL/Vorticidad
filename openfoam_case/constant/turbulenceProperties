@@ -1,0 +1,54 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: Propiedades de Turbulencia            |
+\*---------------------------------------------------------------------------*/
+
+// ============================================================
+// MODELO DE TURBULENCIA — turbulenceProperties
+// ============================================================
+// Se usa el modelo k-ε estándar (RANS) como punto de partida.
+//
+// RANS (Reynolds-Averaged Navier-Stokes):
+//   Descompone el flujo: U = Ū + u'  (media + fluctuación)
+//   La ecuación promediada incluye el tensor de Reynolds: -ρ<u'u'>
+//   Que se modela con la hipótesis de Boussinesq:
+//     -ρ<u'u'> = 2·νt·S - (2/3)·k·I
+//
+// Ventajas del k-ε:
+//   + Robusto y numericamente estable
+//   + Barato computacionalmente
+//   - Sobreestima νt en flujos con rotación fuerte (como tornados)
+//
+// Para mayor precisión en tornados: usar k-ω SST o LES
+// (LES resuelve las grandes escalas directamente — más costoso)
+// ============================================================
+
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "constant";
+    object      turbulenceProperties;
+}
+
+// Tipo de simulación: RAS (Reynolds-Averaged Simulation)
+// Alternativas: laminar, LES
+simulationType  RAS;
+
+RAS
+{
+    // Modelo k-epsilon estándar
+    // Ecuaciones de transporte:
+    //   Dk/Dt = ∇·[(ν + νt/σk)∇k] + Pk - ε
+    //   Dε/Dt = ∇·[(ν + νt/σε)∇ε] + C1ε·(ε/k)·Pk - C2ε·ε²/k
+    //
+    // donde Pk = νt·|∇U + (∇U)ᵀ|² (producción por gradiente de velocidad)
+    RASModel    kEpsilon;
+
+    // Turbulencia activa
+    turbulence  on;
+
+    // Imprimir coeficientes del modelo al inicio
+    printCoeffs on;
+}
