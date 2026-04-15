@@ -31,6 +31,8 @@ FoamFile
 }
 
 // Presión interna: referencia cero (gauge pressure)
+dimensions      [0 2 -2 0 0 0 0];
+
 internalField   uniform 0;
 
 boundaryField

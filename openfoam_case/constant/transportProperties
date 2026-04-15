@@ -39,7 +39,7 @@ transportModel  Newtonian;
 
 // Viscosidad cinemática del aire a 20°C y 1 atm
 // ν = 1.48e-5 m²/s
-nu              [0 2 -1 0 0 0 0] 1.48e-05;
+nu              [0 2 -1 0 0 0 0] 1e-04;
 
 // ============================================================
 // DENSIDAD (referencia, para post-procesamiento)

@@ -27,6 +27,22 @@ import os
 import time
 import argparse
 import json
+import io
+
+# Forzar codificación UTF-8 en Windows para evitar UnicodeEncodeError
+if sys.platform == "win32":
+    try:
+        # Configuración para Python 3.7+
+        if hasattr(sys.stdout, 'reconfigure'):
+            sys.stdout.reconfigure(encoding='utf-8')
+        else:
+            # Fallback para versiones anteriores
+            import codecs
+            sys.stdout = codecs.getwriter('utf-8')(sys.stdout.buffer, 'replace')
+            sys.stderr = codecs.getwriter('utf-8')(sys.stderr.buffer, 'replace')
+    except Exception:
+        # Si todo falla, al menos no crasheamos el programa
+        pass
 
 # Agregar directorio actual al path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -52,7 +68,14 @@ def imprimir_banner():
 ║   Universidad — Mecánica de Fluidos Computacional                       ║
 ╚══════════════════════════════════════════════════════════════════════════╝
 """
-    print(banner)
+    try:
+        print(banner)
+    except UnicodeEncodeError:
+        # Fallback para terminales que no soportan Unicode
+        print("\n" + "="*70)
+        print("  SIMULACION CFD - VORTICE TIPO TORNADO 3D")
+        print("  Modelo: Burgers Vortex + Rankine")
+        print("="*70 + "\n")
 
 
 def imprimir_separador(titulo: str):
@@ -294,7 +317,10 @@ if __name__ == "__main__":
         print("\n[Main] Simulación interrumpida por el usuario.")
         sys.exit(0)
     except Exception as e:
-        print(f"\n[Main] ❌ Error en el pipeline: {e}")
+        try:
+            print(f"\n[Main] Error en el pipeline: {e}")
+        except UnicodeEncodeError:
+            print(f"\n[Main] Error en el pipeline (error de encoding)")
         import traceback
         traceback.print_exc()
         sys.exit(1)

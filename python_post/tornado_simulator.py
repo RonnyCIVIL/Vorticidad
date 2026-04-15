@@ -56,7 +56,7 @@ class TornadoParameters:
     def __init__(self):
         # === Propiedades del fluido (aire a 20°C, 1 atm) ===
         self.rho    = 1.225         # [kg/m³] Densidad del aire
-        self.mu     = 1.81e-5       # [Pa·s]  Viscosidad dinámica
+        self.mu     = 1.225e-4      # [Pa·s]  Viscosidad dinámica (incrementada para amortiguamiento)
         self.nu     = self.mu / self.rho  # [m²/s] Viscosidad cinemática ≈ 1.48e-5
         
         # === Geometría del dominio ===
@@ -64,8 +64,8 @@ class TornadoParameters:
         self.H_domain = 4.0         # [m] Altura total del dominio
         
         # === Parámetros del vórtice ===
-        self.rc     = 0.3           # [m] Radio del núcleo (core radius)
-        self.Gamma  = 5.0           # [m²/s] Circulación total Γ (intensidad del vórtice)
+        self.rc     = 0.15          # [m] Radio del núcleo (core radius)
+        self.Gamma  = 8.0           # [m²/s] Circulación total Γ (intensidad del vórtice)
         self.a      = 1.0           # [1/s] Tasa de estiramiento (straining rate)
         
         # Velocidad máxima tangencial (en r = rc):
@@ -395,9 +395,12 @@ class TornadoSimulator:
 # ============================================================================
 
 if __name__ == "__main__":
-    print("=" * 70)
-    print("  SIMULACIÓN DE VÓRTICE TIPO TORNADO — Modelo Burgers/Rankine 3D")
-    print("=" * 70)
+    try:
+        print("=" * 70)
+        print("  SIMULACIÓN DE VÓRTICE TIPO TORNADO — Modelo Burgers/Rankine 3D")
+        print("=" * 70)
+    except UnicodeEncodeError:
+        print("--- SIMULACION TORNADO ---")
     
     # Importar aquí para testing independiente
     import sys

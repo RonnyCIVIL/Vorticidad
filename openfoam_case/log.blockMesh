@@ -1,0 +1,16 @@
+/*---------------------------------------------------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  2312                                  |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+Build  : _9a9aeb73-20260127 OPENFOAM=2312 patch=260127 version=2312
+Arch   : "LSB;label=32;scalar=64"
+Exec   : blockMesh
+Date   : Apr 15 2026
+Time   : 17:12:41
+Host   : DobleRHG
+PID    : 3424
+fileName::stripInvalid() called for invalid fileName /mnt/c/Users/ronz8/OneDrive/Escritorio/VorticidadMecanicaFluidosFinal()/openfoam_case
+    For debug level (= 2) > 1 this is considered fatal
