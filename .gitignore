@@ -13,9 +13,12 @@ venv/
 .pytest_cache/
 
 # Simulation Data (OpenFOAM)
-# Exclude large mesh and field data if needed, but for a showcase case we might want some
-# openfoam_case/polyMesh/
-# openfoam_case/[0-9]*/
+# Exclude large mesh and field data to keep GitHub repo healthy (< 1GB)
+openfoam_case/polyMesh/
+openfoam_case/[0-9]*/
+openfoam_case/VTK/
+postProcessing/
+log.*
 
 # Build outputs
 dist/

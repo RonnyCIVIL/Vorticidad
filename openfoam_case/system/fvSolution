@@ -3,20 +3,6 @@
 | \\      /  F ield         | OpenFOAM: Configuración de Solvers — fvSolution |
 \*---------------------------------------------------------------------------*/
 
-// ============================================================
-// SOLVERS Y ALGORITMOS — fvSolution
-// ============================================================
-// Define los solvers lineales para cada campo, y el algoritmo
-// de acoplamiento presión-velocidad (PIMPLE).
-//
-// PIMPLE = PISO + SIMPLE:
-//   - PISO: Pressure Implicit with Splitting of Operator
-//   - SIMPLE: Semi-Implicit Method for Pressure-Linked Equations
-//
-// PIMPLE permite grandes pasos de tiempo (Co > 1) con estabilidad
-// gracias a las iteraciones externas (nOuterCorrectors)
-// ============================================================
-
 FoamFile
 {
     version     2.0;
@@ -28,16 +14,11 @@ FoamFile
 
 solvers
 {
-    // --------------------------------------------------------
-    // Solver de PRESIÓN — Ecuación de Poisson: ∇²p = ∇·u/Δt
-    // GAMG: Geometric Agglomerated Algebraic Multigrid
-    // Más eficiente que PCG para mallas grandes
-    // --------------------------------------------------------
     p
     {
         solver          GAMG;
-        tolerance       1e-07;      // Tolerancia absoluta
-        relTol          0.01;       // Tolerancia relativa
+        tolerance       1e-07;
+        relTol          0.01;
         smoother        GaussSeidel;
         nCellsInCoarsestLevel 10;
         cacheAgglomeration true;
@@ -46,18 +27,12 @@ solvers
         mergeLevels     1;
     }
 
-    // Presión corregida (solver pimpleFoam)
     pFinal
     {
         $p;
-        relTol          0;  // Última iteración: sin tolerancia relativa
+        relTol          0;
     }
 
-    // --------------------------------------------------------
-    // Solver de VELOCIDAD
-    // PBiCGStab: Preconditioned BiConjugate Gradient Stabilized
-    // DILU: Diagonal Incomplete LU (precondicionador eficiente)
-    // --------------------------------------------------------
     U
     {
         solver          PBiCGStab;
@@ -72,7 +47,6 @@ solvers
         relTol          0;
     }
 
-    // Energía cinética turbulenta k
     k
     {
         solver          PBiCGStab;
@@ -87,7 +61,6 @@ solvers
         relTol          0;
     }
 
-    // Tasa de disipación ε
     epsilon
     {
         solver          PBiCGStab;
@@ -103,28 +76,12 @@ solvers
     }
 }
 
-// ============================================================
-// ALGORITMO PIMPLE — Acoplamiento Presión-Velocidad
-// ============================================================
-// El flujo incompresible requiere que ∇·u = 0 (divergencia nula)
-// PIMPLE resuelve iterativamente:
-//   1. Predecir U con presión actual
-//   2. Resolver ecuación de presión (Poisson)
-//   3. Corregir U para satisfacer ∇·u = 0
-//   4. Repetir (nCorrectors veces)
 PIMPLE
 {
-    // Iteraciones externas del algoritmo PIMPLE
-    // Mayor número → más estabilidad, mayor costo computacional
-    nOuterCorrectors    3;
-
-    // Iteraciones internas de corrección de presión (PISO)
+    nOuterCorrectors    5;
     nCorrectors         2;
-
-    // Correcciones de no-ortogonalidad de malla
     nNonOrthogonalCorrectors 1;
-
-    // Criterio de convergencia para las iteraciones externas
+    
     residualControl
     {
         U
@@ -140,20 +97,16 @@ PIMPLE
     }
 }
 
-// Relajación para la fase SIMPLE del algoritmo
 relaxationFactors
 {
     fields
     {
-        // Sin relajación en el campo p (PIMPLE no lo necesita)
+        p               0.3;
     }
     equations
     {
-        U               1;    // Sin sub-relajación en transitorio
-        UFinal          1;
-        k               1;
-        kFinal          1;
-        epsilon         1;
-        epsilonFinal    1;
+        U               0.7;
+        k               0.7;
+        epsilon         0.7;
     }
 }

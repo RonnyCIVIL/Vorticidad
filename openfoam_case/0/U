@@ -47,11 +47,10 @@ boundaryField
     // --------------------------------------------------------
     bottom
     {
-        type            fixedValue;
-        // Velocidad: componente tangencial + vertical (updraft)
-        // (Ux, Uy, Uz) = componentes del vórtice en la base
-        // Se impone rotación ciclónica (antihoraria en hemisfero norte)
-        value           uniform (0 0 0);
+        type            rotatingWallVelocity;
+        origin          (0 0 0);
+        axis            (0 0 1);
+        omega           10; // Velocidad angular inyectada
     }
 
     // --------------------------------------------------------

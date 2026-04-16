@@ -52,7 +52,7 @@ divSchemes
     default                     none;
 
     // Término advectivo de velocidad: (u·∇)u  — genera vorticidad
-    div(phi,U)                  Gauss limitedLinear 1;
+    div(phi,U)                  Gauss upwind;
 
     // Térm. advectivo de k y ε del modelo de turbulencia
     div(phi,k)                  Gauss limitedLinear 1;
